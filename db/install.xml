@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/wall/db" VERSION="20151205" COMMENT="XMLDB file for Moodle local_libwall plugin"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <TABLE NAME="local_libwall_walls" COMMENT="Wall instances">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="contextid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Context ID of where the wall is created"/>
+        <FIELD NAME="component" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="Component frankenstyle name of the wall owner"/>
+        <FIELD NAME="area" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false" COMMENT="Comment wall area"/>
+        <FIELD NAME="itemid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Item identifier within the area - interpreted by the owner component"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Timestamp of when the wall was created"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="pk_id" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_contextid" TYPE="foreign" FIELDS="contextid" REFTABLE="context" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="ux_location" UNIQUE="true" FIELDS="contextid, component, area, itemid" COMMENT="Makes sure we have unique wall id per location and allows to quickly locate the wall"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_libwall_comments" COMMENT="Wall comments">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="wallid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="ID of the wall the comment is put on"/>
+        <FIELD NAME="seqnum" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Sequence number of the comment on the wall"/>
+        <FIELD NAME="content" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Comment content"/>
+        <FIELD NAME="format" TYPE="int" LENGTH="3" NOTNULL="true" SEQUENCE="false" COMMENT="Content format"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="User ID of the content author"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Timestamp of when the comment was created"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="pk_id" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_wallid" TYPE="foreign" FIELDS="wallid" REFTABLE="local_libwall" REFFIELDS="id"/>
+        <KEY NAME="fk_userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="ux_seq" UNIQUE="true" FIELDS="wallid, seqnum" COMMENT="Sequence number is unique within the wall"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_libwall_replies" COMMENT="Replies to comments">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="commentid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="ID of the comment we are reply to"/>
+        <FIELD NAME="content" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Content of the reply"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="User ID of the reply author"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Timestamp of when the reply was created"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="pk_id" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_comment" TYPE="foreign" FIELDS="commentid" REFTABLE="local_libwall_comments" REFFIELDS="id"/>
+        <KEY NAME="fk_user" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+  </TABLES>
+</XMLDB>
