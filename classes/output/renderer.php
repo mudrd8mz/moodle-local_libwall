@@ -15,18 +15,35 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Provides strings for the local_libwall plugin
+ * Provides the {@link local_libwall\output\renderer} class.
  *
- * @package     local_libwall
- * @category    string
+ * @package     plugintype_pluginname
+ * @subpackage  plugintype_pluginname
+ * @category    optional API reference
  * @copyright   2015 David Mudrak <david@moodle.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace local_libwall\output;
 
-$string['addcommentbutton'] = 'Add comment';
-$string['addcommentplaceholder'] = 'Add your comment here';
-$string['commenttitle'] = 'Comment number {$a}';
-$string['pluginname'] = 'Comments wall library';
-$string['reltimeago'] = '{$a} ago';
+use plugin_renderer_base;
+use local_libwall\wall;
+
+/**
+ * Defines the renderer for the comments wall.
+ *
+ * @copyright 2015 David Mudrak <david@moodle.com>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class renderer extends plugin_renderer_base {
+
+    /**
+     * Render the instance of a wall with loaded comments.
+     *
+     * @param local_libwall\wall $wall
+     * @return string
+     */
+    public function render_wall(wall $wall) {
+        return parent::render_from_template('local_libwall/wall', $wall->export_for_template($this));
+    }
+}

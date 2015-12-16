@@ -24,11 +24,16 @@
 
 namespace local_libwall;
 
+use renderable;
+use templatable;
 use stdClass;
 use context;
 use user_picture;
+use renderer_base;
 use dml_exception;
 use coding_exception;
+use core_date;
+use moodle_url;
 
 /**
  * Represents a wall on which the comments are placed.
@@ -36,7 +41,7 @@ use coding_exception;
  * @copyright 2015 David Mudrak <david@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class wall {
+class wall implements renderable, templatable {
 
     /** @var int */
     public $id;
@@ -55,6 +60,9 @@ class wall {
 
     /** @var array */
     public $comments = [];
+
+    /** @var int */
+    protected $defaultcommentformat = FORMAT_MOODLE;
 
     /** @var mixed */
     protected $wallrecord;
@@ -210,7 +218,6 @@ class wall {
 
         // Comments are ordered newest first, replies are newest last.
         // For replies coming in the same second, the order is not defined.
-        // TODO: This might be configurable by the lib consumer.
         $sql .= " ORDER BY c.seqnum DESC, r.timecreated";
 
         $rs = $DB->get_recordset_sql($sql, $params);
@@ -254,6 +261,64 @@ class wall {
         $rs->close();
 
         return count($this->comments);
+    }
+
+    /**
+     * Sets default format for comments.
+     *
+     * @param int $format
+     */
+    public function set_default_comment_format($format) {
+        $this->defaultcommentformat = $format;
+    }
+
+    /**
+     * Export wall data for the mustache template.
+     *
+     * @param renderer_base $output
+     * @return array
+     */
+    public function export_for_template(renderer_base $output) {
+        global $CFG;
+        require_once($CFG->libdir.'/externallib.php');
+
+        $viewfullnames = has_capability('moodle/site:viewfullnames', $this->context);
+
+        $exported = [
+            'wall' => [
+                'id' => $this->id,
+                'maxseqnum' => $this->comments ? max(array_keys($this->comments)) : 0,
+                'minseqnum' => $this->comments ? min(array_keys($this->comments)) : 0,
+                'commentformatlist' => $this->get_comment_formats(),
+                'commentformatdefault' => $this->defaultcommentformat,
+            ],
+            'comments' => [],
+        ];
+
+        foreach ($this->comments as $data) {
+            list($content, $format) = external_format_text($data->content, $data->format, $this->context->id, $this->component,
+                $this->area, $this->itemid);
+
+            $exported['comments'][] = [
+                'id' => $data->id,
+                'seqnum' => $data->seqnum,
+                'content' => $content,
+                'format' => $format,
+                'timecreated' => [
+                    'absdate' => userdate($data->timecreated, '', core_date::get_user_timezone()),
+                    'reldate' => get_string('reltimeago', 'local_libwall', format_time(time() - $data->timecreated)),
+                    'iso8601date' => date('c', $data->timecreated),
+                ],
+                'author' => [
+                    'fullname' => fullname($data->user, $viewfullnames),
+                    'link' => (new moodle_url('/user/view.php', ['id' => $data->user->id]))->out(false),
+                    'picture' => $output->user_picture($data->user)
+                ],
+                'replies' => [],
+            ];
+        }
+
+        return $exported;
     }
 
     /**
@@ -305,5 +370,14 @@ class wall {
                  WHERE wallid = ?";
 
         return $DB->get_field_sql($sql, array($this->id), MUST_EXIST);
+    }
+
+    /**
+     * Returns the list of supported comment text formats.
+     *
+     * @return array
+     */
+    protected function get_comment_formats() {
+        return format_text_menu();
     }
 }

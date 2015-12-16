@@ -15,18 +15,22 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Provides strings for the local_libwall plugin
+ * Defines external functions provided by the plugin.
  *
  * @package     local_libwall
- * @category    string
  * @copyright   2015 David Mudrak <david@moodle.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['addcommentbutton'] = 'Add comment';
-$string['addcommentplaceholder'] = 'Add your comment here';
-$string['commenttitle'] = 'Comment number {$a}';
-$string['pluginname'] = 'Comments wall library';
-$string['reltimeago'] = '{$a} ago';
+$functions = [
+    'local_libwall_add_comment' => [
+        'classname' => 'local_libwall\api',
+        'methodname' => 'add_comment',
+        'classpath' => '',
+        'description' => 'Publish a new comment on the wall instance',
+        'type' => 'write',
+        'capabilities' => '',
+    ],
+];
